@@ -315,6 +315,65 @@ void frame_erase(int f)
     }
 }
 
+// Helper Function : Last Frame Used
+// This function takes the current_index in the reference string
+// This functon loops through the frame table and returns the index of the page that is used last
+int last_frame_used(int current_index)
+{
+    int last_frame_index = 0;
+    int curr_frame_index = 0;
+    int lowest_frame = MAX_FRAMES_AVAILABLE + 1;
+    int flag = 0; //Flag to check if there are no more instances of the frame
+    int frame_tracker = -1;
+    for (int frame = 0; frame < frames_available; frame++)
+    {
+        //Now we have each frame in the frame table
+        for (int i = current_index; i <= reference_string_length; i++)
+        {
+            if (i == reference_string_length) //If no more future calls, flag and break
+            {
+                flag = 1;
+                break;
+            }
+            if (reference_string[i] == frames[frame])
+            {
+                curr_frame_index = i;
+                if (curr_frame_index > last_frame_index)
+                {
+                    last_frame_index = curr_frame_index;
+                }
+                break;
+            }
+        }
+        if (flag == 1)
+        {
+            if (frames[frame] < lowest_frame)
+            {
+                lowest_frame = frames[frame];
+                flag = 0;
+                frame_tracker = frame;
+            }
+            continue;
+        }
+    }
+
+    if (frame_tracker >= 0)
+    {
+        return frame_tracker;
+    }
+
+
+    int frame = reference_string[last_frame_index];
+
+    for (int i = 0; i < frames_available; i++)
+    {
+        if (frames[i] == frame)
+        {
+            return i;
+        }
+    }
+}
+
 void algorithm_FIFO()
 {
     // TODO: Implement the FIFO algorithm here
@@ -388,6 +447,56 @@ void algorithm_FIFO()
 void algorithm_OPT()
 {
     // TODO: Implement the OPT algorithm here
+
+    // Let's think about the algo bro
+
+    int frameCount = 0; // Keep track of number of processes in the frame
+    int pageFault = 0;
+
+    for (int current_page = 0; current_page < reference_string_length; current_page++)
+    {
+        if (frameCount < frames_available)
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Don't need to do anything
+                printf(template_no_page_fault, reference_string[current_page]);
+                continue;
+            }
+
+            frame_insert(reference_string[current_page]);
+            frameCount++;
+            pageFault++;
+            display_fault_frame(reference_string[current_page]);
+        }
+        else 
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Don't need to do anything
+                printf(template_no_page_fault, reference_string[current_page]);
+                continue;
+            }
+            else
+            {
+                // Current Page is not in frame
+                // Replacement is Necessary
+                // Algo : 
+                //  1. Need to find the frame that is not used for the longest time
+                //  2. Replace that page in the frame
+                int index = last_frame_used(current_page);
+                frames[index] = reference_string[current_page];
+                frameCount++;
+                pageFault++;
+                display_fault_frame(reference_string[current_page]);
+            }
+        }
+    }
+
+    printf(template_total_page_fault, pageFault);
+
 }
 
 void algorithm_LRU()
