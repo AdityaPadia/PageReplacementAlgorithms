@@ -324,7 +324,8 @@ int last_frame_used(int current_index)
     int curr_frame_index = 0;
     int lowest_frame = MAX_FRAMES_AVAILABLE + 1;
     int flag = 0; //Flag to check if there are no more instances of the frame
-    int frame_tracker = -1;
+    int frame_tracker = -1; //Keeps track of the lowest frame in case of tie
+
     for (int frame = 0; frame < frames_available; frame++)
     {
         //Now we have each frame in the frame table
@@ -350,8 +351,8 @@ int last_frame_used(int current_index)
             if (frames[frame] < lowest_frame)
             {
                 lowest_frame = frames[frame];
-                flag = 0;
-                frame_tracker = frame;
+                flag = 0; //Resestting flag for follwing iterations
+                frame_tracker = frame; //Settting lowest frame number in frame_tracker
             }
             continue;
         }
@@ -359,7 +360,7 @@ int last_frame_used(int current_index)
 
     if (frame_tracker >= 0)
     {
-        return frame_tracker;
+        return frame_tracker; //Return the lowest frame number in case of a tie
     }
 
 
@@ -449,6 +450,16 @@ void algorithm_OPT()
     // TODO: Implement the OPT algorithm here
 
     // Let's think about the algo bro
+    // 1. Start traversing the pages
+    //  i) if frameCount is less than framesAvailable
+    //      a) Insert page into frames one by one until capacity is reached or all pages are processed
+    //      b) Increment Page Fault, increment frameCount
+    // ii) Else
+    //      If current page is there in the frames : print no page fault (do nothing)
+    //      Else
+    //          a) Find the page that is not used for the longest period of time
+    //          b) In case of conflict take the lower numeber frame
+    //          c) Increment Page Fault
 
     int frameCount = 0; // Keep track of number of processes in the frame
     int pageFault = 0;
