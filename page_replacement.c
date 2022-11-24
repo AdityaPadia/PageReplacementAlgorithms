@@ -266,38 +266,123 @@ void display_fault_frame(int current_frame)
     printf("\n");
 }
 
+// Helper Function : Frame Search
+// This function a frame (int) as an input and returns a integer
+// Return value : 1 if the frame is present in frames
+// Return value : 0 if the frame is not present in frames
+
+int frame_search(int f)
+{
+    for (int i = 0; i < frames_available; i++)
+    {
+        if (frames[i] == f)
+        {
+            return 1;
+            break;
+        }
+    }
+
+    return 0;
+}
+
+//Helper Function : Frame Insert
+// This function takes a frame (int) and inserts it in the first available position
+void frame_insert(int f)
+{
+    for (int i = 0; i < frames_available; i++)
+    {
+        if (frames[i] == -1)
+        {
+            frames[i] = f;
+            break;
+        }
+    }
+}
+
+// Helper Function : Frame Erase
+// This function takes a frame (int) and removes it from frames
+// Does not return any value
+
+void frame_erase(int f)
+{
+    for (int i = 0; i < frames_available; i++)
+    {
+        if (frames[i] == f)
+        {
+            frames[i] = -1;
+            break;
+        }
+    }
+}
+
 void algorithm_FIFO()
 {
     // TODO: Implement the FIFO algorithm here
 
-    //Printing the data
-    // printf("Algorithm : %s\n", algorithm);
-    // printf("Frames Available : %d\n", frames_available);
-    // printf("Frames : \n");
 
-    // for (int i = 0; i < frames_available; i++)
-    // {
-    //     printf("Frame %d : Value : %d \n", i, frames[i]);
-    // }
-
-    // printf("Reference String Length : %d \n", reference_string_length);
-    // printf("Reference String \n");
-
-    // for (int i = 0; i < reference_string_length; i++)
-    // {
-    //     printf("%d ", reference_string[i]);
-    // }
-
-
-
-    //Let's think about the algo bro
-    // We need to initialise a queue that contains the max number of processes
-    // Every time a new process comes we add that to the queue
-    // We also need to add the process to the frame
-    // During replacement, we replace the oldest process from the queue that is also present in the frame
+    // Let's think about the algo bro
+    // 1. Start traversing the pages
+    //  i) if frameCount is less than framesAvailable
+    //      a) Insert page into frames one by one until capacity is reached or all pages are processed
+    //      b) Maintain pages order in FIFO queue
+    //      c) Increment Page Fault, increment frameCount
+    // ii) Else
+    //      If current page is there in the frames : print no page fault (do nothing)
+    //      Else
+    //          a) Remove the first page of from the queue as it was first to enter memory
+    //          b) Replace the first page in the queue with current page
+    //          c) Store current page in the queue
+    //          d) Increment Page Fault
 
     
+    struct Queue q;
+    queue_init(&q);
 
+    int frameCount = 0; // Keep track of number of processes in the frame
+    int pageFault = 0;
+
+    for (int current_page = 0; current_page < reference_string_length; current_page++)
+    {
+        if (frameCount < frames_available)
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Don't need to do anything
+                printf(template_no_page_fault, reference_string[current_page]);
+                continue;
+            }
+
+            frame_insert(reference_string[current_page]);
+            frameCount++;
+            pageFault++;
+            display_fault_frame(reference_string[current_page]);
+            queue_enqueue(&q, reference_string[current_page]);
+        }
+        else
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Don't need to do anything
+                printf(template_no_page_fault, reference_string[current_page]);
+            }
+            else
+            {
+                // Curent Page is not in frame
+                // Replacement is necessary
+                int val = queue_peek(&q);
+                queue_dequeue(&q);
+                frame_erase(val);
+                frame_insert(reference_string[current_page]);
+                queue_enqueue(&q, reference_string[current_page]);
+                pageFault++;
+                display_fault_frame(reference_string[current_page]);
+            }
+        }
+    }
+
+    printf(template_total_page_fault, pageFault);
 }
 
 void algorithm_OPT()
