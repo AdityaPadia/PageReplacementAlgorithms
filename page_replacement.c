@@ -375,6 +375,37 @@ int last_frame_used(int current_index)
     }
 }
 
+// Helper Function : Lowest Frame Count
+// This function takes the frame_count array (int []) as input
+// The function loops through the frame and returns the least recently used frame
+int lowest_frame_count(int frame_count_array[])
+{
+    int lowest_frame_count = reference_string_length + 1;
+    int lowest_frame;
+    
+    for (int i = 0; i < frames_available; i++)
+    {
+        if (frame_count_array[frames[i]] < lowest_frame_count)
+        {
+            lowest_frame_count = frame_count_array[frames[i]];
+            lowest_frame = frames[i];
+        }
+    }
+
+    return lowest_frame;
+}
+
+// Helper Function : Print Frame Count Array
+// This function takes the frame_count_array (int []) as input
+// This function has no return value, it is for debugging
+void print_frame_count_array(int frame_count_array[])
+{
+    for (int i = 0; i < MAX_FRAMES_AVAILABLE; i++)
+    {
+        printf("i : %d \t Frame Count : %d\n", i , frame_count_array[i]);
+    }
+}
+
 void algorithm_FIFO()
 {
     // TODO: Implement the FIFO algorithm here
@@ -513,6 +544,81 @@ void algorithm_OPT()
 void algorithm_LRU()
 {
     // TODO: Implement the LRU algorithm here
+
+    // Let's think about the algo bro
+    // 1. Start traversing the pages
+    //  i) if frameCount is less than framesAvailable
+    //      a) Insert page into frames one by one until capacity is reached or all pages are processed
+    //      b) Increment Page Fault, increment frameCount
+    // ii) Else
+    //      If current page is there in the frames : print no page fault (do nothing)
+    //      Else
+    //          a) Find the frame in the array with the highest count
+    //          b) In case of conflict take the lower numeber frame
+    //          c) Increment Page Fault
+
+    int frame_count_array[MAX_FRAMES_AVAILABLE] = {};
+
+    for (int i = 0; i < MAX_FRAMES_AVAILABLE; i++)
+    {
+        frame_count_array[i] = MAX_FRAMES_AVAILABLE;
+    }
+
+    int frameCount = 0; // Keep track of number of processes in the frame
+    int pageFault = 0;
+
+    for (int current_page = 0; current_page < reference_string_length; current_page++)
+    {
+        if (frameCount < frames_available)
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Update count array
+                printf(template_no_page_fault, reference_string[current_page]);
+                frame_count_array[reference_string[current_page]] = current_page;
+                continue;
+            }
+
+            frame_insert(reference_string[current_page]);
+            frame_count_array[reference_string[current_page]] = current_page;
+            // print_frame_count_array(frame_count_array);
+            frameCount++;
+            pageFault++;
+            display_fault_frame(reference_string[current_page]);
+        }
+        else 
+        {
+            if (frame_search(reference_string[current_page]) == 1)
+            {
+                // Current Page is in Frame
+                // Update count array
+                printf(template_no_page_fault, reference_string[current_page]);
+                frame_count_array[reference_string[current_page]] = current_page;
+                // print_frame_count_array(frame_count_array);
+                continue;
+            }
+            else
+            {
+                // Current Page is not in frame
+                // Replacement is Necessary
+                // Algo : 
+                // 1. Traverse the frames
+                // 2. Traverse the frame count array
+                // 3. Find the frame that is the least recently used
+                // 4. Replace the farme and update the values in the frame_count_table
+
+                int lowest_frame = lowest_frame_count(frame_count_array);
+                frame_erase(lowest_frame);
+                frame_insert(reference_string[current_page]);
+                frame_count_array[reference_string[current_page]] = current_page;
+                frameCount++;
+                pageFault++;
+                display_fault_frame(reference_string[current_page]);
+            }
+        }
+    }
+    printf(template_total_page_fault, pageFault);
 }
 
 void initialize_frames()
